@@ -544,6 +544,7 @@ namespace Internal.IL
 
         private void ImportDup()
         {
+            _stack.Push(_stack.Peek().Duplicate());
         }
 
         private void ImportPop()
@@ -864,6 +865,7 @@ namespace Internal.IL
 
         private void ImportLoadIndirect(int token)
         {
+            ImportLoadIndirect(ResolveTypeToken(token));
         }
 
         private void ImportLoadIndirect(TypeDesc type)
@@ -888,10 +890,39 @@ namespace Internal.IL
 
         private void ImportStoreIndirect(int token)
         {
+            ImportStoreIndirect(ResolveTypeToken(token));
         }
 
         private void ImportStoreIndirect(TypeDesc type)
         {
+            StackEntry value = _stack.Pop();
+            StackEntry destinationPointer = _stack.Pop();
+            LLVMTypeRef requestedPointerType = LLVM.PointerType(GetLLVMTypeForTypeDesc(type), 0);
+            LLVMValueRef typedValue = value.LLVMValue;
+            LLVMValueRef typedPointer = destinationPointer.LLVMValue;
+
+            if (LLVM.GetTypeKind(LLVM.TypeOf(destinationPointer.LLVMValue)) != LLVMTypeKind.LLVMPointerTypeKind)
+            {
+                typedPointer = LLVM.BuildIntToPtr(_builder, destinationPointer.LLVMValue, requestedPointerType, "stindintptrcast");
+            }
+            else
+            {
+                typedPointer = LLVM.BuildPointerCast(_builder, destinationPointer.LLVMValue, requestedPointerType, "stindptrcast");
+            }
+
+            if (value.Type != type)
+            {
+                if (LLVM.GetTypeKind(GetLLVMTypeForTypeDesc(value.Type)) != LLVMTypeKind.LLVMPointerTypeKind)
+                {
+                    typedValue = LLVM.BuildIntCast(_builder, typedValue, GetLLVMTypeForTypeDesc(type), "stindvalcast");
+                }
+                else
+                {
+                    typedValue = LLVM.BuildPointerCast(_builder, typedValue, GetLLVMTypeForTypeDesc(type), "stindvalptrcast");
+                }
+            }
+
+            LLVM.BuildStore(_builder, typedValue, typedPointer);
         }
 
         private void ImportBinaryOperation(ILOpcode opcode)
@@ -994,6 +1025,27 @@ namespace Internal.IL
 
         private void ImportShiftOperation(ILOpcode opcode)
         {
+            LLVMValueRef result;
+
+            StackEntry numBitsToShift = _stack.Pop();
+            StackEntry valueToShift = _stack.Pop();
+
+            switch (opcode)
+            {
+                case ILOpcode.shl:
+                    result = LLVM.BuildShl(_builder, valueToShift.LLVMValue, numBitsToShift.LLVMValue, "shl");
+                    break;
+                case ILOpcode.shr:
+                    result = LLVM.BuildAShr(_builder, valueToShift.LLVMValue, numBitsToShift.LLVMValue, "shr");
+                    break;
+                case ILOpcode.shr_un:
+                    result = LLVM.BuildLShr(_builder, valueToShift.LLVMValue, numBitsToShift.LLVMValue, "shr");
+                    break;
+                default:
+                    throw new InvalidOperationException(); // Should be unreachable
+            }
+
+            PushExpression(valueToShift.Kind, "", result, valueToShift.Type);
         }
 
         private void ImportCompareOperation(ILOpcode opcode)
@@ -1056,6 +1108,29 @@ namespace Internal.IL
 
         private void ImportUnaryOperation(ILOpcode opCode)
         {
+            var argument = _stack.Pop();
+             
+            LLVMValueRef result;
+            switch (opCode)
+            {
+                case ILOpcode.neg:
+                    if (argument.Kind == StackValueKind.Float)
+                    {
+                        result = LLVM.BuildFNeg(_builder, argument.LLVMValue, "neg");
+                    }   
+                    else
+                    {
+                        result = LLVM.BuildNeg(_builder, argument.LLVMValue, "neg");
+                    }
+                    break;
+                case ILOpcode.not:
+                    result = LLVM.BuildNot(_builder, argument.LLVMValue, "not");
+                    break;
+                default:
+                    throw new NotSupportedException(); // unreachable
+            }
+
+            PushExpression(argument.Kind, "", result, argument.Type);
         }
 
         private void ImportCpOpj(int token)
@@ -1329,6 +1404,11 @@ namespace Internal.IL
 
             MarkBasicBlock(next);
 
+        }
+
+        private TypeDesc ResolveTypeToken(int token)
+        {
+            return (TypeDesc)_methodIL.GetObject(token);
         }
 
         private TypeDesc GetWellKnownType(WellKnownType wellKnownType)
