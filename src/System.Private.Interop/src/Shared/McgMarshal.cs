@@ -356,7 +356,7 @@ namespace System.Runtime.InteropServices
         }
 #endif
 
-#if ENABLE_WINRT
+#if ENABLE_MIN_WINRT
        
         [MethodImplAttribute(MethodImplOptions.NoInlining)]
         public static unsafe HSTRING StringToHString(string sourceString)
@@ -1063,7 +1063,7 @@ namespace System.Runtime.InteropServices
 
             IntPtr pResult = default(IntPtr);
 
-            int hr = CalliIntrinsics.StdCall<int>(
+            int hr = CalliIntrinsics.StdCall__int(
                 pIActivationFactoryInternal->pVtable->pfnActivateInstance,
                 pIActivationFactoryInternal,
                 &pResult

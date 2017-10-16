@@ -4,7 +4,7 @@
     <AssemblyName>System.Private.Interop</AssemblyName>
     <OutputType>Library</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);TARGET_CORE_API_SET</DefineConstants>
+    <DefineConstants>$(DefineConstants);TARGET_CORE_API_SET;</DefineConstants>
     <!-- Disable warning about CLSCompliant attributes on members not being needed. -->
     <NoWarn>$(NoWarn);3021</NoWarn>
     <!-- Use MSFT assembly key for compatibility with uapaot targeting pack -->
@@ -172,6 +172,7 @@
     <Compile Include="System\Runtime\InteropServices\WindowsRuntime\WindowsRuntimeImportAttribute.cs" />
     <Compile Include="System\Runtime\InteropServices\WindowsRuntime\WriteOnlyArrayAttribute.cs" />
   </ItemGroup>
+  
   <ItemGroup Condition="'$(TargetsWindows)' == 'true'">
     <Compile Include="Interop\Interop.Sync.Windows.cs" />
     <Compile Include="Interop\Interop.WinRT.cs" />

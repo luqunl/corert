@@ -837,14 +837,14 @@ namespace System.Runtime.InteropServices
         internal static bool IsComClass(this RuntimeTypeHandle handle)
         {
 #if CORECLR
-            return InteropExtensions.IsClass(handle);        
+            return  InteropExtensions.IsClass(handle) &&
+                    !InteropExtensions.AreTypesAssignable(handle, typeof(Delegate).TypeHandle);        
 #else
             return !InteropExtensions.IsInterface(handle) &&
                     !handle.IsValueType() &&
                     !InteropExtensions.AreTypesAssignable(handle, typeof(Delegate).TypeHandle);
 #endif
         }
-
 
         internal static bool IsIJupiterObject(this RuntimeTypeHandle interfaceType)
         {
@@ -947,26 +947,16 @@ namespace System.Runtime.InteropServices
             return default(IntPtr);
         }
         static IntPtr[] SharedCCWList = new IntPtr[] {
-#if ENABLE_WINRT
+#if ENABLE_MIN_WINRT
             SharedCcw_IVector.GetVtable(),
             SharedCcw_IVectorView.GetVtable(),
             SharedCcw_IIterable.GetVtable(),
             SharedCcw_IIterator.GetVtable(),
-
-#if RHTESTCL || CORECLR
-            default(IntPtr),
-#else
             SharedCcw_AsyncOperationCompletedHandler.GetVtable(),
-#endif
             SharedCcw_IVector_Blittable.GetVtable(),
             SharedCcw_IVectorView_Blittable.GetVtable(),
-
-#if RHTESTCL || CORECLR
-            default(IntPtr)
-#else
             SharedCcw_IIterator_Blittable.GetVtable()
-#endif
-#endif //ENABLE_WINRT
+#endif //ENABLE_MIN_WINRT
         };
 
         internal static IntPtr GetCcwVtable(this RuntimeTypeHandle interfaceType)

@@ -35,7 +35,7 @@ namespace System.Runtime.InteropServices
         /// </summary>
         internal static string GetRuntimeClassName(Object obj)
         {
-#if  ENABLE_WINRT
+#if  ENABLE_MIN_WINRT
             System.IntPtr pWinRTItf = default(IntPtr);
 
             try
@@ -60,7 +60,7 @@ namespace System.Runtime.InteropServices
         /// </summary>
         internal static string GetRuntimeClassName(IntPtr pWinRTItf)
         {
-#if  ENABLE_WINRT
+#if  ENABLE_MIN_WINRT
             void* unsafe_hstring = null;
 
             try
@@ -93,7 +93,7 @@ namespace System.Runtime.InteropServices
             Interop.COM.__IStream* pStreamNativePtr = (Interop.COM.__IStream*)(void*)pStream;
             UInt64 newPosition;
 
-            int hr = CalliIntrinsics.StdCall<int>(
+            int hr = CalliIntrinsics.StdCall__int(
                 pStreamNativePtr->vtbl->pfnSeek,
                 pStreamNativePtr,
                 0UL,
@@ -110,7 +110,7 @@ namespace System.Runtime.InteropServices
             Interop.COM.__IStream* pStreamNativePtr = (Interop.COM.__IStream*)(void*)pStream;
             UInt64 newPosition;
 
-            int hr = CalliIntrinsics.StdCall<int>(
+            int hr = CalliIntrinsics.StdCall__int(
                 pStreamNativePtr->vtbl->pfnSetSize,
                 pStreamNativePtr,
                 lSize,

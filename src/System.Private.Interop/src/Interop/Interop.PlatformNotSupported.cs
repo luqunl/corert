@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 // are from McgMarshal , refactoring WinRT marshal API is TODO
 namespace System.Runtime.InteropServices
 {
-#if CORECLR  
+#if CORECLR && !ENABLE_MIN_WINRT 
 
     public static partial class McgMarshal
     {

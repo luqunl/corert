@@ -71,5 +71,10 @@
   <ItemGroup Condition="'$(TargetsWindows)' != 'true'">
     <Compile Include="Interop\Interop.Common.Unix.cs" />
     <Compile Include="Interop\Interop.String.Unix.cs" />
-  </ItemGroup>  
+  </ItemGroup>
+
+  
+  
+  
+  
 </Project>
